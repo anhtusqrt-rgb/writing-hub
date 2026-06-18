@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Writing Hub">
+<meta name="theme-color" content="#090E1A">
+<title>Writing Hub</title>
+<style>
+/* ═══════════════════════════════════════════════════════
+   DESIGN SYSTEM — Dark Elevated
+   Base grid: 4px
+   Type scale: 11 / 12 / 13 / 15 / 17 / 22 / 32
+   Surface levels: bg → s1 → s2 → s3
+   Accent: warm gold (desaturated, not neon)
+═══════════════════════════════════════════════════════ */
+:root {
+  /* Surfaces — 4 levels of elevation */
+  --bg:      #090E1A;
+  --s1:      #111827;   /* cards, panels */
+  --s2:      #1C2535;   /* elevated cards */
+  --s3:      #253040;   /* active states, inputs */
+
+  /* Borders — light to strong */
+  --b1:      #1F2D40;   /* subtle dividers */
+  --b2:      #2D3F55;   /* card borders */
+  --b3:      #3D5068;   /* focused borders */
+
+  /* Text hierarchy — 4 levels */
+  --t1:      #EEF0F3;   /* primary — headings, key content */
+  --t2:      #9AABB8;   /* secondary — labels, subtitles */
+  --t3:      #5C7080;   /* tertiary — placeholders, hints */
+  --t4:      #3A4D5E;   /* disabled / very muted */
+
+  /* Accent — warm gold (desaturated) */
+  --a1:      #C9A96E;   /* primary accent */
+  --a2:      #A07D44;   /* accent dark / hover */
+  --a-bg:    rgba(201,169,110,0.08);   /* accent surface */
+  --a-bd:    rgba(201,169,110,0.22);   /* accent border */
+
+  /* Semantic */
+  --success: #4D9A6A;
+  --danger:  #A35050;
+  --warning: #C47C30;
+
+  /* Type scale */
+  --t-xs:    11px;
+  --t-sm:    12px;
+  --t-base:  14px;
+  --t-md:    15px;
+  --t-lg:    17px;
+  --t-xl:    22px;
+  --t-2xl:   32px;
+
+  /* Spacing (4px grid) */
+  --sp-1:    4px;
+  --sp-2:    8px;
+  --sp-3:    12px;
+  --sp-4:    16px;
+  --sp-5:    20px;
+  --sp-6:    24px;
+  --sp-8:    32px;
+  --sp-10:   40px;
+
+  /* Radius */
+  --r-sm:    6px;
+  --r-md:    10px;
+  --r-lg:    14px;
+  --r-full:  999px;
+
+  /* Safe areas */
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--t1);
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--safe-t);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── APP SHELL ── */
+.app-header {
+  height: 48px;
+  padding: 0 var(--sp-5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--b1);
+  flex-shrink: 0;
+  background: var(--bg);
+}
+
+.app-wordmark {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--a1);
+}
+
+.app-meta {
+  font-size: var(--t-xs);
+  color: var(--t3);
+  letter-spacing: 0.02em;
+}
+
+.screens { flex: 1; overflow: hidden; position: relative; }
+
+.screen {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: var(--sp-5) var(--sp-5);
+  padding-bottom: calc(64px + var(--safe-b) + var(--sp-4));
+  display: none;
+  flex-direction: column;
+  gap: var(--sp-4);
+  scroll-behavior: smooth;
+}
+.screen.active { display: flex; }
+
+/* ── TAB BAR ── */
+.tab-bar {
+  display: flex;
+  border-top: 1px solid var(--b1);
+  background: var(--bg);
+  flex-shrink: 0;
+  padding-bottom: var(--safe-b);
+  height: calc(56px + var(--safe-b));
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  color: var(--t3);
+  border: none;
+  background: transparent;
+  transition: color 0.15s;
+  padding-bottom: 4px;
+  position: relative;
+}
+
+.tab.active {
+  color: var(--a1);
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 2px;
+  background: var(--a1);
+  border-radius: 0 0 var(--r-sm) var(--r-sm);
+}
+
+.tab-icon { font-size: 17px; line-height: 1; }
+.tab-label { font-size: var(--t-xs); font-weight: 600; letter-spacing: 0.04em; }
+
+/* ── DESIGN SYSTEM COMPONENTS ── */
+
+/* Section label — replaces plain muted text */
+.section-label {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--t3);
+  padding-left: var(--sp-1);
+}
+
+/* Card — surface level 1 */
+.card {
+  background: var(--s1);
+  border: 1px solid var(--b2);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.card-body { padding: var(--sp-4); }
+
+/* Accent card — for prompts, highlights */
+.card-accent {
+  background: var(--s1);
+  border: 1px solid var(--a-bd);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+/* Input — elevated above card */
+textarea, input[type=text] {
+  width: 100%;
+  background: var(--s3);
+  border: 1px solid var(--b2);
+  border-radius: var(--r-sm);
+  padding: var(--sp-3) var(--sp-4);
+  color: var(--t1);
+  font-family: inherit;
+  font-size: var(--t-md);
+  line-height: 1.6;
+  outline: none;
+  resize: none;
+  transition: border-color 0.15s, background 0.15s;
+  -webkit-appearance: none;
+}
+textarea:focus, input[type=text]:focus {
+  border-color: var(--a1);
+  background: var(--s3);
+}
+::placeholder { color: var(--t3); font-style: italic; }
+
+/* Buttons — 3 levels */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: 13px var(--sp-4);
+  border-radius: var(--r-sm);
+  font-size: var(--t-base);
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.12s, transform 0.1s;
+  letter-spacing: 0.01em;
+  width: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active { transform: scale(0.97); opacity: 0.85; }
+
+.btn-primary  { background: var(--a1); color: #0A0F1A; }
+.btn-secondary{ background: var(--s2); color: var(--t1); border: 1px solid var(--b2); }
+.btn-ghost    { background: transparent; color: var(--t2); border: 1px solid var(--b2); }
+.btn-danger   { background: transparent; color: var(--danger); border: 1px solid rgba(163,80,80,0.3); }
+.btn-sm       { padding: 8px var(--sp-4); font-size: var(--t-sm); width: auto; border-radius: var(--r-sm); }
+
+.row { display: flex; gap: var(--sp-2); }
+.row .btn { flex: 1; }
+
+/* Chips — selectable tags */
+.chips { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+
+.chip {
+  padding: 6px var(--sp-3);
+  border-radius: var(--r-full);
+  border: 1px solid var(--b2);
+  background: transparent;
+  color: var(--t3);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+.chip.active {
+  border-color: var(--a1);
+  color: var(--a1);
+  background: var(--a-bg);
+}
+
+/* Stat cards */
+.stats-row { display: flex; gap: var(--sp-3); }
+
+.stat-card {
+  flex: 1;
+  background: var(--s1);
+  border: 1px solid var(--b2);
+  border-radius: var(--r-md);
+  padding: var(--sp-4) var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+.stat-card.hi { border-color: var(--a-bd); background: linear-gradient(135deg, var(--s1), rgba(201,169,110,0.04)); }
+
+.stat-num {
+  font-size: var(--t-xl);
+  font-weight: 700;
+  color: var(--a1);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.stat-lbl {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--t3);
+}
+
+/* Divider */
+.divider { height: 1px; background: var(--b1); margin: var(--sp-1) 0; }
+
+/* Notif */
+.notif {
+  position: fixed;
+  bottom: calc(64px + var(--safe-b) + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  background: var(--s2);
+  border: 1px solid var(--a-bd);
+  color: var(--t1);
+  padding: var(--sp-2) var(--sp-5);
+  border-radius: var(--r-full);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  opacity: 0;
+  transition: all 0.2s;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 300;
+}
+.notif.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Fade up animation */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(8px); }
+  to   { opacity:1; transform:none; }
+}
+.fade-up { animation: fadeUp 0.22s ease; }
+
+/* ═══════════════════════════════════
+   TAB 1 — CAPTURE
+═══════════════════════════════════ */
+.capture-item {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--s1);
+  border: 1px solid var(--b1);
+  border-radius: var(--r-sm);
+  transition: border-color 0.15s;
+}
+.capture-item:active { border-color: var(--b2); }
+
+.capture-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--a1);
+  background: var(--a-bg);
+  border: 1px solid var(--a-bd);
+  padding: 3px 6px;
+  border-radius: var(--r-sm);
+  margin-top: 2px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.capture-body { flex: 1; min-width: 0; }
+.capture-text { font-size: var(--t-base); line-height: 1.55; color: var(--t1); word-break: break-word; }
+.capture-time { font-size: var(--t-xs); color: var(--t3); margin-top: 3px; }
+
+.capture-del {
+  background: none; border: none;
+  color: var(--t4); cursor: pointer;
+  font-size: var(--t-sm); padding: 2px 4px;
+  flex-shrink: 0; border-radius: var(--r-sm);
+  transition: color 0.15s;
+}
+.capture-del:active { color: var(--danger); }
+
+.empty-state {
+  text-align: center;
+  color: var(--t3);
+  font-size: var(--t-base);
+  font-style: italic;
+  padding: var(--sp-8) 0;
+}
+
+/* ═══════════════════════════════════
+   TAB 2 — PROMPT
+═══════════════════════════════════ */
+.prompt-card {
+  background: var(--s1);
+  border: 1px solid var(--a-bd);
+  border-radius: var(--r-lg);
+  padding: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  min-height: 150px;
+}
+
+.prompt-eyebrow {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--a1);
+}
+
+.prompt-headline {
+  font-size: var(--t-lg);
+  line-height: 1.6;
+  color: var(--t1);
+  font-weight: 400;
+}
+
+.prompt-hint-row {
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--b1);
+  font-size: var(--t-sm);
+  color: var(--t3);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* Timer */
+.timer-card {
+  background: var(--s1);
+  border: 1px solid var(--b2);
+  border-radius: var(--r-md);
+  padding: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.timer-digit {
+  font-size: 44px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  text-align: center;
+  color: var(--a1);
+  line-height: 1;
+  transition: color 0.3s;
+}
+.timer-digit.running { color: var(--t1); }
+.timer-digit.warning { color: var(--warning); }
+.timer-digit.urgent  { color: var(--danger); }
+.timer-digit.done    { color: var(--success); }
+
+.progress-track { height: 2px; background: var(--b1); border-radius: var(--r-full); overflow: hidden; }
+.progress-fill  { height: 100%; background: var(--a1); transition: width 1s linear; border-radius: var(--r-full); }
+
+.min-chips { display: flex; gap: var(--sp-2); justify-content: center; }
+.min-chip {
+  padding: 5px 13px;
+  border-radius: var(--r-full);
+  border: 1px solid var(--b2);
+  background: transparent;
+  color: var(--t3);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.min-chip.active { border-color: var(--a1); color: var(--a1); background: var(--a-bg); }
+
+/* Structure guide */
+.struct-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--s1);
+  border: 1px solid var(--b2);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  user-select: none;
+}
+.struct-header-label {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--t2);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.struct-arrow { font-size: var(--t-sm); color: var(--t3); transition: transform 0.2s; }
+.struct-header.open .struct-arrow { transform: rotate(180deg); }
+
+.struct-body {
+  display: none;
+  background: var(--s1);
+  border: 1px solid var(--b2);
+  border-top: none;
+  border-radius: 0 0 var(--r-sm) var(--r-sm);
+  padding: var(--sp-4);
+  gap: var(--sp-4);
+  flex-direction: column;
+}
+.struct-body.open { display: flex; }
+
+.struct-step { display: flex; gap: var(--sp-3); align-items: flex-start; }
+
+.struct-num {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--a-bd);
+  color: var(--a1);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+
+.struct-content h4 { font-size: var(--t-base); font-weight: 600; color: var(--t1); margin-bottom: 3px; }
+.struct-content p  { font-size: var(--t-sm); color: var(--t3); line-height: 1.55; }
+
+/* ═══════════════════════════════════
+   TAB 3 — TRACKER
+═══════════════════════════════════ */
+.checkin-card {
+  background: var(--s1);
+  border: 1px solid var(--b2);
+  border-radius: var(--r-md);
+  padding: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.checkin-status {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--t3);
+}
+.checkin-status.done { color: var(--success); }
+
+.checkin-done {
+  font-size: var(--t-base);
+  color: var(--success);
+  font-weight: 600;
+}
+.checkin-done-sub { font-size: var(--t-sm); color: var(--t3); font-style: italic; margin-top: var(--sp-1); }
+
+/* Heatmap */
+.heatmap-scroll { overflow-x: auto; padding-bottom: var(--sp-1); -webkit-overflow-scrolling: touch; }
+.heatmap { display: flex; gap: 3px; width: max-content; }
+.heatmap-col { display: flex; flex-direction: column; gap: 3px; }
+
+.hm-cell { width: 11px; height: 11px; border-radius: 2px; background: var(--b1); flex-shrink: 0; }
+.hm-cell.wrote   { background: var(--a1); opacity: 0.75; }
+.hm-cell.skipped { background: #161E2C; }
+.hm-cell.today   { box-shadow: 0 0 0 1.5px var(--a1); }
+.hm-cell.future  { background: transparent; }
+
+/* Log list */
+.log-item {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: baseline;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--s1);
+  border-radius: var(--r-sm);
+}
+
+.log-indicator {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--a1);
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.log-indicator.missed { background: var(--b2); }
+
+.log-date  { font-size: var(--t-xs); font-weight: 600; color: var(--t3); min-width: 72px; letter-spacing: 0.02em; }
+.log-topic { font-size: var(--t-base); color: var(--t1); flex: 1; }
+.log-topic.missed { color: var(--t3); font-style: italic; }
+
+/* ═══════════════════════════════════
+   EXPORT MODAL
+═══════════════════════════════════ */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 200;
+  align-items: flex-end;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open { display: flex; }
+
+.modal-sheet {
+  background: var(--s2);
+  border: 1px solid var(--b2);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  padding: var(--sp-5);
+  padding-bottom: calc(var(--sp-5) + var(--safe-b));
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  max-height: 75vh;
+}
+
+.modal-handle {
+  width: 36px; height: 4px;
+  background: var(--b3);
+  border-radius: var(--r-full);
+  margin: 0 auto var(--sp-2);
+}
+
+.modal-title {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--a1);
+}
+
+.modal-textarea {
+  min-height: 140px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: var(--t-sm);
+  line-height: 1.7;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.modal-hint { font-size: var(--t-sm); color: var(--t3); font-style: italic; }
+</style>
+</head>
+<body>
+
+<!-- APP HEADER -->
+<div class="app-header">
+  <div class="app-wordmark">Writing Hub</div>
+  <div class="app-meta" id="headerDate"></div>
+</div>
+
+<div class="screens">
+
+  <!-- ══════════════════════════════
+       TAB 1 · CAPTURE
+  ══════════════════════════════ -->
+  <div class="screen active" id="tab-capture">
+
+    <div class="card">
+      <div class="card-body" style="display:flex;flex-direction:column;gap:12px;">
+        <textarea id="captureInput" rows="3" placeholder="Paste a link, quote, or thought…"></textarea>
+        <div class="chips" id="sourceChips">
+          <div class="chip active" data-src="article">Article</div>
+          <div class="chip" data-src="book">Book</div>
+          <div class="chip" data-src="video">Video</div>
+          <div class="chip" data-src="thought">Thought</div>
+          <div class="chip" data-src="quote">Quote</div>
+          <div class="chip" data-src="other">Other</div>
+        </div>
+        <button class="btn btn-primary" onclick="captureItem()">Save</button>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;">
+      <div class="section-label" id="captureCountLabel">Captured</div>
+      <button class="btn btn-ghost btn-sm" onclick="openExport()">Export →</button>
+    </div>
+
+    <div id="captureList"></div>
+
+  </div>
+
+  <!-- ══════════════════════════════
+       TAB 2 · PROMPT
+  ══════════════════════════════ -->
+  <div class="screen" id="tab-prompt">
+
+    <div class="chips" id="catChips">
+      <div class="chip active" data-cat="all">All</div>
+      <div class="chip" data-cat="observation">Observe</div>
+      <div class="chip" data-cat="opinion">Opinion</div>
+      <div class="chip" data-cat="memory">Memory</div>
+      <div class="chip" data-cat="learning">Learning</div>
+      <div class="chip" data-cat="question">Question</div>
+      <div class="chip" data-cat="contrast">Contrast</div>
+    </div>
+
+    <div class="prompt-card" id="promptCard">
+      <div class="prompt-eyebrow" id="promptCat">—</div>
+      <div class="prompt-headline" id="promptText">Tap New Prompt to begin.</div>
+      <div class="prompt-hint-row" id="promptHint">100–300 words · 1 idea · 20 min</div>
+    </div>
+
+    <div class="row">
+      <button class="btn btn-primary" onclick="newPrompt()">New Prompt</button>
+      <button class="btn btn-ghost btn-sm" onclick="copyPrompt()" style="flex:none;padding:13px 16px;">Copy</button>
+    </div>
+
+    <!-- Timer -->
+    <div class="timer-card">
+      <div class="min-chips" id="minChips">
+        <div class="min-chip" data-min="10">10</div>
+        <div class="min-chip" data-min="15">15</div>
+        <div class="min-chip active" data-min="20">20</div>
+        <div class="min-chip" data-min="25">25</div>
+      </div>
+      <div class="timer-digit" id="timerDisplay">20:00</div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="row">
+        <button class="btn btn-secondary" id="timerBtn" onclick="toggleTimer()">Start</button>
+        <button class="btn btn-ghost" onclick="resetTimer()">Reset</button>
+      </div>
+    </div>
+
+    <!-- Structure guide -->
+    <div>
+      <div class="struct-header" id="structHeader" onclick="toggleStruct()">
+        <div class="struct-header-label">Mini Essay Structure</div>
+        <div class="struct-arrow">▼</div>
+      </div>
+      <div class="struct-body" id="structBody">
+        <div class="struct-step">
+          <div class="struct-num">1</div>
+          <div class="struct-content">
+            <h4>Hook — 1–2 sentences</h4>
+            <p>Drop the reader in. Specific scene, surprising fact, or blunt opinion. No warm-up.</p>
+          </div>
+        </div>
+        <div class="struct-step">
+          <div class="struct-num">2</div>
+          <div class="struct-content">
+            <h4>One Idea, Fully Developed</h4>
+            <p>Stay in one lane. Concrete example or story. Resist tangents.</p>
+          </div>
+        </div>
+        <div class="struct-step">
+          <div class="struct-num">3</div>
+          <div class="struct-content">
+            <h4>Punchy Ending — 1–2 sentences</h4>
+            <p>A reframe, a question, or the implication. Cut clean — don't trail off.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════
+       TAB 3 · TRACKER
+  ══════════════════════════════ -->
+  <div class="screen" id="tab-tracker">
+
+    <div class="stats-row">
+      <div class="stat-card hi">
+        <div class="stat-num" id="streakNum">0</div>
+        <div class="stat-lbl">Streak 🔥</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="totalNum">0</div>
+        <div class="stat-lbl">Total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="monthNum">0</div>
+        <div class="stat-lbl">Month</div>
+      </div>
+    </div>
+
+    <div class="checkin-card" id="checkinCard">
+      <div class="checkin-status" id="checkinStatus">Today</div>
+      <div id="checkinForm">
+        <input type="text" id="topicInput" placeholder="What did you write about? (optional)" maxlength="120" style="margin-bottom:12px;">
+        <div class="row">
+          <button class="btn btn-primary" onclick="checkIn()">✓ Wrote today</button>
+          <button class="btn btn-ghost" onclick="markSkipped()">Missed</button>
+        </div>
+      </div>
+      <div id="checkinDone" style="display:none;">
+        <div class="checkin-done">✓ Logged</div>
+        <div class="checkin-done-sub" id="doneTopic"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label" style="margin-bottom:10px;">16 weeks</div>
+      <div class="heatmap-scroll"><div class="heatmap" id="heatmap"></div></div>
+    </div>
+
+    <div>
+      <div class="section-label" style="margin-bottom:10px;">Recent sessions</div>
+      <div style="display:flex;flex-direction:column;gap:3px;" id="logList"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <button class="tab active" id="tab-btn-capture" onclick="switchTab('capture')">
+    <div class="tab-icon">📥</div>
+    <div class="tab-label">Capture</div>
+  </button>
+  <button class="tab" id="tab-btn-prompt" onclick="switchTab('prompt')">
+    <div class="tab-icon">✏️</div>
+    <div class="tab-label">Prompt</div>
+  </button>
+  <button class="tab" id="tab-btn-tracker" onclick="switchTab('tracker')">
+    <div class="tab-icon">📈</div>
+    <div class="tab-label">Tracker</div>
+  </button>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Export to Distillation</div>
+    <textarea class="modal-textarea" id="exportText" readonly></textarea>
+    <div class="modal-hint">Copy → paste into distillation-session.html</div>
+    <div class="row">
+      <button class="btn btn-primary" onclick="copyExport()">Copy All</button>
+      <button class="btn btn-ghost" onclick="closeExport()">Cancel</button>
+    </div>
+    <button class="btn btn-danger" onclick="clearCapture()">Clear after export</button>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+/* ═══════════════════════════
+   PROMPTS
+═══════════════════════════ */
+const PROMPTS = [
+  {cat:"observation",text:"Describe one thing you noticed today that most people would walk past.",hint:"Specificity is the soul of observation."},
+  {cat:"observation",text:"What does the place you're in feel like at this exact hour?",hint:"Treat it like a photograph — capture the mood, not just the facts."},
+  {cat:"observation",text:"Notice one small ritual you do without thinking. Describe it in detail.",hint:"The automatic reveals the unconscious."},
+  {cat:"observation",text:"What does the light look like right now, exactly where you are?",hint:"Photographers see light first. Practice that here."},
+  {cat:"observation",text:"Describe a sound you hear regularly but have never written about.",hint:"Sound is underused in writing. Make it the center."},
+  {cat:"observation",text:"Write about a stranger you saw recently — what story did you invent for them?",hint:"The fiction you create says as much about you as about them."},
+  {cat:"opinion",text:"What's one commonly accepted advice you think is wrong?",hint:"Vague disagreement doesn't make an essay — a specific claim does."},
+  {cat:"opinion",text:"What's something that used to matter to you that no longer does, and why?",hint:"Changed values make for honest essays."},
+  {cat:"opinion",text:"What do you think is overrated — and what would you replace it with?",hint:"Don't just criticize. Propose the alternative."},
+  {cat:"opinion",text:"What's a small belief you hold that you've never told anyone?",hint:"The things we don't say publicly are often the most interesting."},
+  {cat:"memory",text:"Write about a moment when you felt genuinely lost — geographically or otherwise.",hint:"Stay in the moment. Resist the urge to explain how it resolved."},
+  {cat:"memory",text:"Write about the last time you felt completely present.",hint:"What made the ordinary feel significant?"},
+  {cat:"memory",text:"Pick a photo you've taken that you still think about. What made you take it?",hint:"What were you trying to capture that the image can't fully hold?"},
+  {cat:"memory",text:"Describe the last time you were wrong about something important.",hint:"The moment of realizing you're wrong is usually more interesting than being right."},
+  {cat:"learning",text:"What's the most useful idea you've encountered recently? Explain it to a 15-year-old.",hint:"If you can't simplify it, you don't understand it yet."},
+  {cat:"learning",text:"What's something you learned that made an old belief feel naive?",hint:"Learning is often about unlearning. Show the before and after."},
+  {cat:"learning",text:"What's a skill you're currently bad at, and what does being bad at it feel like?",hint:"The beginner's experience is underwritten. Describe it honestly."},
+  {cat:"learning",text:"What's a lesson you had to learn more than once before it stuck?",hint:"Why do some lessons need repeating?"},
+  {cat:"question",text:"What question do you keep returning to but still can't answer?",hint:"Don't try to answer it fully. Just circle it. Show why it matters."},
+  {cat:"question",text:"What does 'doing good work' mean to you right now, in this season of your life?",hint:"Definitions shift. Write the current one down before it changes again."},
+  {cat:"question",text:"What would you spend your time on if you stopped optimizing for outcomes?",hint:"Process vs. product. Which feels more like you?"},
+  {cat:"contrast",text:"Compare who you were 5 years ago to now — in one specific way, not broadly.",hint:"Specific change > general arc. Pick one thing."},
+  {cat:"contrast",text:"Compare what you thought something would be like vs. what it actually is.",hint:"The gap between expectation and reality is always interesting."},
+  {cat:"contrast",text:"Compare your inner life to your outer life right now. How wide is the gap?",hint:"Honesty here > polish."},
+];
+
+/* ═══════════════════════════
+   TABS
+═══════════════════════════ */
+function switchTab(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('tab-btn-' + name).classList.add('active');
+  if (name === 'tracker') renderTracker();
+  if (name === 'capture') renderCapture();
+}
+
+/* ═══════════════════════════
+   CAPTURE
+═══════════════════════════ */
+const QC_KEY = 'qc_v3';
+let selSrc = 'article';
+
+function qcLoad() { try { return JSON.parse(localStorage.getItem(QC_KEY)||'[]'); } catch { return []; } }
+function qcSave(d) { localStorage.setItem(QC_KEY, JSON.stringify(d)); }
+
+document.getElementById('sourceChips').addEventListener('click', e => {
+  const c = e.target.closest('.chip'); if (!c) return;
+  document.querySelectorAll('#sourceChips .chip').forEach(x => x.classList.remove('active'));
+  c.classList.add('active'); selSrc = c.dataset.src;
+});
+
+function captureItem() {
+  const inp = document.getElementById('captureInput');
+  const txt = inp.value.trim(); if (!txt) return;
+  const items = qcLoad();
+  items.push({ text: txt, source: selSrc, ts: Date.now() });
+  qcSave(items); inp.value = '';
+  renderCapture(); showNotif('Saved');
+}
+
+function renderCapture() {
+  const items = qcLoad();
+  document.getElementById('captureCountLabel').textContent = `Captured (${items.length})`;
+  const list = document.getElementById('captureList');
+  list.innerHTML = '';
+  if (!items.length) { list.innerHTML = '<div class="empty-state">Nothing yet. Paste something above.</div>'; return; }
+  [...items].reverse().forEach((item, ri) => {
+    const realIdx = items.length - 1 - ri;
+    const el = document.createElement('div');
+    el.className = 'capture-item fade-up';
+    el.innerHTML = `
+      <div class="capture-badge">${item.source}</div>
+      <div class="capture-body">
+        <div class="capture-text">${esc(item.text)}</div>
+        <div class="capture-time">${relTime(item.ts)}</div>
+      </div>
+      <button class="capture-del" onclick="deleteCapture(${realIdx})">✕</button>`;
+    list.appendChild(el);
+  });
+}
+
+function deleteCapture(idx) {
+  const items = qcLoad(); items.splice(idx, 1); qcSave(items); renderCapture();
+}
+
+function openExport() {
+  const items = qcLoad();
+  if (!items.length) { showNotif('Nothing to export yet'); return; }
+  document.getElementById('exportText').value = items.map(i => `[${i.source}] ${i.text}`).join('\n');
+  document.getElementById('exportModal').classList.add('open');
+}
+function closeExport() { document.getElementById('exportModal').classList.remove('open'); }
+function copyExport() {
+  navigator.clipboard.writeText(document.getElementById('exportText').value)
+    .then(() => { showNotif('Copied!'); closeExport(); });
+}
+function clearCapture() {
+  if (!confirm('Clear all items?')) return;
+  qcSave([]); renderCapture(); closeExport();
+}
+
+/* ═══════════════════════════
+   PROMPT
+═══════════════════════════ */
+let curCat = 'all', lastP = null;
+
+document.getElementById('catChips').addEventListener('click', e => {
+  const c = e.target.closest('.chip'); if (!c) return;
+  document.querySelectorAll('#catChips .chip').forEach(x => x.classList.remove('active'));
+  c.classList.add('active'); curCat = c.dataset.cat;
+});
+
+function newPrompt() {
+  const pool = curCat === 'all' ? PROMPTS : PROMPTS.filter(p => p.cat === curCat);
+  const fil = pool.filter(p => p !== lastP);
+  const pick = (fil.length ? fil : pool)[Math.floor(Math.random() * (fil.length || pool.length))];
+  lastP = pick;
+  const card = document.getElementById('promptCard');
+  card.classList.remove('fade-up'); void card.offsetWidth; card.classList.add('fade-up');
+  document.getElementById('promptCat').textContent = pick.cat.charAt(0).toUpperCase() + pick.cat.slice(1);
+  document.getElementById('promptText').textContent = pick.text;
+  document.getElementById('promptHint').textContent = pick.hint;
+}
+
+function copyPrompt() {
+  const t = document.getElementById('promptText').textContent;
+  if (t === 'Tap New Prompt to begin.') return;
+  navigator.clipboard.writeText(t).then(() => showNotif('Copied'));
+}
+
+/* ═══════════════════════════
+   TIMER
+═══════════════════════════ */
+let tMins = 20, total = 1200, remain = 1200, running = false, tInt = null;
+
+document.getElementById('minChips').addEventListener('click', e => {
+  const c = e.target.closest('.min-chip'); if (!c) return;
+  document.querySelectorAll('.min-chip').forEach(x => x.classList.remove('active'));
+  c.classList.add('active'); tMins = parseInt(c.dataset.min); resetTimer();
+});
+
+function resetTimer() {
+  clearInterval(tInt); running = false;
+  total = tMins * 60; remain = total;
+  document.getElementById('timerBtn').textContent = 'Start';
+  updateTimer();
+}
+
+function toggleTimer() {
+  if (running) {
+    clearInterval(tInt); running = false;
+    document.getElementById('timerBtn').textContent = 'Resume';
+  } else {
+    if (remain <= 0) resetTimer();
+    running = true;
+    document.getElementById('timerBtn').textContent = 'Pause';
+    tInt = setInterval(() => {
+      remain--;
+      updateTimer();
+      if (remain <= 0) { clearInterval(tInt); running = false; document.getElementById('timerBtn').textContent = 'Done'; showNotif("Time's up — ship it"); }
+    }, 1000);
+  }
+}
+
+function updateTimer() {
+  const m = Math.floor(remain/60), s = remain%60;
+  const d = document.getElementById('timerDisplay');
+  d.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  document.getElementById('progressFill').style.width = (remain/total*100) + '%';
+  const r = remain/total;
+  d.className = 'timer-digit';
+  if (remain<=0) d.classList.add('done');
+  else if (running) { if(r<=0.15) d.classList.add('urgent'); else if(r<=0.3) d.classList.add('warning'); else d.classList.add('running'); }
+}
+
+function toggleStruct() {
+  document.getElementById('structHeader').classList.toggle('open');
+  document.getElementById('structBody').classList.toggle('open');
+}
+
+/* ═══════════════════════════
+   TRACKER
+═══════════════════════════ */
+const WT_KEY = 'wt_v3';
+const TODAY = new Date().toISOString().slice(0,10);
+
+function wtLoad() { try { return JSON.parse(localStorage.getItem(WT_KEY)||'{}'); } catch { return {}; } }
+function wtSave(d) { localStorage.setItem(WT_KEY, JSON.stringify(d)); }
+function isoD(d) { return d.toISOString().slice(0,10); }
+
+function checkIn() {
+  const topic = document.getElementById('topicInput').value.trim();
+  const log = wtLoad(); log[TODAY] = { wrote:true, topic, ts:Date.now() }; wtSave(log); renderTracker(); showNotif('Logged ✓');
+}
+
+function markSkipped() {
+  const log = wtLoad(); log[TODAY] = { wrote:false, topic:'', ts:Date.now() }; wtSave(log); renderTracker(); showNotif('Noted.');
+}
+
+function renderTracker() {
+  const log = wtLoad(), now = new Date();
+  const wrote = Object.keys(log).filter(d=>log[d].wrote).sort();
+  const month = wrote.filter(d=>d.startsWith(now.toISOString().slice(0,7))).length;
+  let streak=0, cd=new Date(now);
+  if(!log[TODAY]) cd.setDate(cd.getDate()-1);
+  while(true){ const d=isoD(cd); if(log[d]&&log[d].wrote){streak++;cd.setDate(cd.getDate()-1);}else break; }
+
+  document.getElementById('streakNum').textContent = streak;
+  document.getElementById('totalNum').textContent = wrote.length;
+  document.getElementById('monthNum').textContent = month;
+
+  const entry = log[TODAY];
+  if (entry) {
+    document.getElementById('checkinForm').style.display='none';
+    document.getElementById('checkinDone').style.display='';
+    document.getElementById('checkinStatus').textContent = entry.wrote ? 'Today ✓' : 'Today — missed';
+    document.getElementById('checkinStatus').className = 'checkin-status' + (entry.wrote?' done':'');
+    document.getElementById('doneTopic').textContent = entry.topic||'';
+  } else {
+    document.getElementById('checkinForm').style.display='';
+    document.getElementById('checkinDone').style.display='none';
+    document.getElementById('checkinStatus').textContent='Today';
+    document.getElementById('checkinStatus').className='checkin-status';
+  }
+
+  // Heatmap
+  const hm = document.getElementById('heatmap'); hm.innerHTML='';
+  const end=new Date(now), start=new Date(now);
+  start.setDate(start.getDate()-(16*7-1));
+  while(start.getDay()!==0) start.setDate(start.getDate()-1);
+  let col=document.createElement('div'); col.className='heatmap-col';
+  let cur=new Date(start);
+  while(cur<=end){
+    if(cur.getDay()===0&&cur>start){ hm.appendChild(col); col=document.createElement('div'); col.className='heatmap-col'; }
+    const ds=isoD(cur), cell=document.createElement('div'); cell.className='hm-cell';
+    if(ds>TODAY) cell.classList.add('future');
+    else if(ds===TODAY){ cell.classList.add('today'); if(log[ds]) cell.classList.add(log[ds].wrote?'wrote':'skipped'); }
+    else if(log[ds]) cell.classList.add(log[ds].wrote?'wrote':'skipped');
+    col.appendChild(cell); cur.setDate(cur.getDate()+1);
+  }
+  hm.appendChild(col);
+
+  // Log
+  const ll=document.getElementById('logList'); ll.innerHTML='';
+  const recent=[];
+  for(let i=0;i<10;i++){ const d=new Date(now); d.setDate(d.getDate()-i); const ds=isoD(d); if(log[ds]) recent.push({ds,...log[ds]}); }
+  if(!recent.length){ ll.innerHTML='<div class="empty-state">No sessions yet.</div>'; return; }
+  recent.forEach(e=>{
+    const el=document.createElement('div'); el.className='log-item';
+    const dStr=new Date(e.ds+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+    el.innerHTML=`<div class="log-indicator ${e.wrote?'':'missed'}"></div><div class="log-date">${dStr}</div><div class="log-topic ${e.wrote?'':'missed'}">${e.wrote?(e.topic||'Wrote'):'Missed'}</div>`;
+    ll.appendChild(el);
+  });
+}
+
+/* ═══════════════════════════
+   UTILS
+═══════════════════════════ */
+function showNotif(msg) {
+  const n=document.getElementById('notif'); n.textContent=msg;
+  n.classList.add('show'); setTimeout(()=>n.classList.remove('show'),2200);
+}
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function relTime(ts){
+  const d=Date.now()-ts,m=Math.floor(d/60000),h=Math.floor(d/3600000),dy=Math.floor(d/86400000);
+  if(m<1)return'just now'; if(m<60)return`${m}m ago`; if(h<24)return`${h}h ago`; if(dy<7)return`${dy}d ago`;
+  return new Date(ts).toLocaleDateString('en-GB');
+}
+
+document.getElementById('captureInput').addEventListener('keydown', e => {
+  if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){ e.preventDefault(); captureItem(); }
+});
+document.getElementById('captureInput').addEventListener('paste', ()=>{
+  setTimeout(()=>{
+    const v=document.getElementById('captureInput').value.trim();
+    if(/^https?:\/\//.test(v)){
+      const s=/youtube|youtu\.be/i.test(v)?'video':/spotify|podcast/i.test(v)?'podcast':'article';
+      document.querySelectorAll('#sourceChips .chip').forEach(c=>c.classList.toggle('active',c.dataset.src===s));
+      selSrc=s;
+    }
+  },50);
+});
+document.getElementById('exportModal').addEventListener('click',e=>{ if(e.target===document.getElementById('exportModal')) closeExport(); });
+document.getElementById('topicInput').addEventListener('keydown',e=>{ if(e.key==='Enter') checkIn(); });
+
+document.getElementById('headerDate').textContent =
+  new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+
+renderCapture();
+newPrompt();
+</script>
+</body>
+</html>

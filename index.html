@@ -669,7 +669,10 @@ textarea:focus, input[type=text]:focus {
 
     <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;">
       <div class="section-label" id="captureCountLabel">Captured</div>
-      <button class="btn btn-ghost btn-sm" onclick="openExport()">Export →</button>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-ghost btn-sm" onclick="openExport('distill')">→ Distillation</button>
+        <button class="btn btn-ghost btn-sm" onclick="openExport('md')" style="color:var(--a1);border-color:var(--a-bd);">→ Obsidian</button>
+      </div>
     </div>
 
     <div id="captureList"></div>
@@ -792,7 +795,10 @@ textarea:focus, input[type=text]:focus {
     </div>
 
     <div>
-      <div class="section-label" style="margin-bottom:10px;">Recent sessions</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div class="section-label">Recent sessions</div>
+        <button class="btn btn-ghost btn-sm" onclick="openTrackerExport()" style="color:var(--a1);border-color:var(--a-bd);">→ Obsidian</button>
+      </div>
       <div style="display:flex;flex-direction:column;gap:3px;" id="logList"></div>
     </div>
 
@@ -820,14 +826,14 @@ textarea:focus, input[type=text]:focus {
 <div class="modal-overlay" id="exportModal">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <div class="modal-title">Export to Distillation</div>
+    <div class="modal-title" id="exportModalTitle">Export</div>
     <textarea class="modal-textarea" id="exportText" readonly></textarea>
-    <div class="modal-hint">Copy → paste into distillation-session.html</div>
+    <div class="modal-hint" id="exportModalHint"></div>
     <div class="row">
-      <button class="btn btn-primary" onclick="copyExport()">Copy All</button>
+      <button class="btn btn-primary" onclick="copyExport()">Copy</button>
       <button class="btn btn-ghost" onclick="closeExport()">Cancel</button>
     </div>
-    <button class="btn btn-danger" onclick="clearCapture()">Clear after export</button>
+    <button class="btn btn-danger" id="exportClearBtn" onclick="clearCapture()" style="display:none">Clear after export</button>
   </div>
 </div>
 
@@ -925,20 +931,71 @@ function deleteCapture(idx) {
   const items = qcLoad(); items.splice(idx, 1); qcSave(items); renderCapture();
 }
 
-function openExport() {
+function openExport(mode) {
   const items = qcLoad();
   if (!items.length) { showNotif('Nothing to export yet'); return; }
-  document.getElementById('exportText').value = items.map(i => `[${i.source}] ${i.text}`).join('\n');
+
+  const dateStr = new Date().toISOString().slice(0,10);
+
+  let text, title, hint;
+  if (mode === 'md') {
+    title = 'Export → Obsidian';
+    hint  = 'Paste vào một note mới trong Obsidian.';
+    text  = `## Captures — ${dateStr}\n\n` +
+            items.map(i => `- [${i.source}] ${i.text}`).join('\n') +
+            `\n\n---\n*Exported from Writing Hub*`;
+  } else {
+    title = 'Export → Distillation';
+    hint  = 'Paste vào distillation-session.html';
+    text  = items.map(i => `[${i.source}] ${i.text}`).join('\n');
+  }
+
+  document.getElementById('exportModalTitle').textContent = title;
+  document.getElementById('exportModalHint').textContent  = hint;
+  document.getElementById('exportText').value = text;
+  document.getElementById('exportClearBtn').style.display = '';
   document.getElementById('exportModal').classList.add('open');
 }
+
 function closeExport() { document.getElementById('exportModal').classList.remove('open'); }
+
 function copyExport() {
   navigator.clipboard.writeText(document.getElementById('exportText').value)
     .then(() => { showNotif('Copied!'); closeExport(); });
 }
+
 function clearCapture() {
   if (!confirm('Clear all items?')) return;
   qcSave([]); renderCapture(); closeExport();
+}
+
+function openTrackerExport() {
+  const log = wtLoad(), now = new Date();
+  const entries = [];
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(now); d.setDate(d.getDate() - i);
+    const ds = isoD(d);
+    if (log[ds]) entries.push({ ds, ...log[ds] });
+  }
+  if (!entries.length) { showNotif('No sessions logged yet'); return; }
+
+  const dateStr = now.toISOString().slice(0,10);
+  const rows = entries.map(e => {
+    const dStr = new Date(e.ds + 'T12:00:00').toLocaleDateString('en-GB', {weekday:'short',day:'numeric',month:'short'});
+    return `| ${dStr} | ${e.wrote ? '✓' : '✗'} | ${e.topic || '—'} |`;
+  }).join('\n');
+
+  const md = `## Writing Log — exported ${dateStr}\n\n` +
+             `| Date | Status | Topic |\n` +
+             `|------|--------|-------|\n` +
+             rows +
+             `\n\n---\n*Exported from Writing Hub*`;
+
+  document.getElementById('exportModalTitle').textContent = 'Writing Log → Obsidian';
+  document.getElementById('exportModalHint').textContent  = 'Paste vào Obsidian — works as a table.';
+  document.getElementById('exportText').value = md;
+  document.getElementById('exportClearBtn').style.display = 'none';
+  document.getElementById('exportModal').classList.add('open');
 }
 
 /* ═══════════════════════════

@@ -1045,9 +1045,6 @@ function switchTab(name) {
 const QC_KEY = 'qc_v3';
 let selSrc = 'article';
 
-function qcLoad() { try { return JSON.parse(localStorage.getItem(QC_KEY)||'[]'); } catch { return []; } }
-function qcSave(d) { localStorage.setItem(QC_KEY, JSON.stringify(d)); }
-
 document.getElementById('sourceChips').addEventListener('click', e => {
   const c = e.target.closest('.chip'); if (!c) return;
   document.querySelectorAll('#sourceChips .chip').forEach(x => x.classList.remove('active'));

@@ -377,8 +377,21 @@ textarea:focus, input[type=text]:focus {
 .capture-text.clamped {
   display: -webkit-box;
   -webkit-line-clamp: 4;
+  /* autoprefixer: off */
   -webkit-box-orient: vertical;
+  /* autoprefixer: on */
   overflow: hidden;
+  line-clamp: 4;
+}
+.capture-expand-btn {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--a1);
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  -webkit-tap-highlight-color: transparent;
 }
 .capture-time { font-size: var(--t-xs); color: var(--t3); margin-top: 3px; }
 
@@ -692,14 +705,7 @@ textarea:focus, input[type=text]:focus {
     <div class="card">
       <div class="card-body">
         <textarea id="captureInput" rows="3" placeholder="Paste a link, quote, or thought…" style="margin-bottom:10px;"></textarea>
-        <div class="chips" id="sourceChips" style="margin-bottom:10px;">
-          <div class="chip active" data-src="article">Article</div>
-          <div class="chip" data-src="book">Book</div>
-          <div class="chip" data-src="video">Video</div>
-          <div class="chip" data-src="thought">Thought</div>
-          <div class="chip" data-src="quote">Quote</div>
-          <div class="chip" data-src="other">Other</div>
-        </div>
+        <div class="chips" id="sourceChips" style="margin-bottom:10px;"></div>
         <button class="btn btn-primary" onclick="captureItem()">Save</button>
       </div>
     </div>
@@ -1069,12 +1075,56 @@ function switchTab(name) {
 ═══════════════════════════ */
 const QC_KEY = 'qc_v3';
 let selSrc = 'article';
+const DEFAULT_SOURCES = ['article','book','video','thought','quote','other'];
 
-document.getElementById('sourceChips').addEventListener('click', e => {
-  const c = e.target.closest('.chip'); if (!c) return;
-  document.querySelectorAll('#sourceChips .chip').forEach(x => x.classList.remove('active'));
-  c.classList.add('active'); selSrc = c.dataset.src;
-});
+function loadCustomTags() {
+  try { return JSON.parse(localStorage.getItem('custom_tags') || '[]'); } catch { return []; }
+}
+function saveCustomTags(tags) { localStorage.setItem('custom_tags', JSON.stringify(tags)); }
+
+function renderSourceChips() {
+  const custom = loadCustomTags();
+  const all = [...DEFAULT_SOURCES, ...custom];
+  const wrap = document.getElementById('sourceChips');
+  wrap.innerHTML = all.map(s =>
+    `<div class="chip${selSrc === s ? ' active' : ''}" onclick="selectSrc('${s}')">${s}</div>`
+  ).join('') +
+  `<div class="chip" onclick="addCustomTag()" style="color:var(--a1);border-color:var(--a-bd);">＋ tag</div>`;
+}
+
+function selectSrc(s) { selSrc = s; renderSourceChips(); }
+
+function addCustomTag() {
+  // Show inline input chip
+  const wrap = document.getElementById('sourceChips');
+  const existing = wrap.querySelector('.tag-input-chip');
+  if (existing) { existing.querySelector('input').focus(); return; }
+  const chip = document.createElement('div');
+  chip.className = 'chip tag-input-chip';
+  chip.style.cssText = 'padding:0;border-color:var(--a1);';
+  const inp = document.createElement('input');
+  inp.type = 'text'; inp.placeholder = 'tag name';
+  inp.style.cssText = 'background:transparent;border:none;outline:none;color:var(--t1);font-size:12px;width:80px;padding:6px 10px;';
+  inp.onkeydown = (e) => {
+    if (e.key === 'Enter') {
+      const val = inp.value.trim().toLowerCase();
+      if (val) {
+        const tags = loadCustomTags();
+        if (!DEFAULT_SOURCES.includes(val) && !tags.includes(val)) { tags.push(val); saveCustomTags(tags); }
+        selSrc = val;
+      }
+      renderSourceChips();
+    }
+    if (e.key === 'Escape') renderSourceChips();
+    e.stopPropagation();
+  };
+  inp.onblur = () => setTimeout(renderSourceChips, 150);
+  chip.appendChild(inp);
+  wrap.appendChild(chip);
+  inp.focus();
+}
+
+renderSourceChips();
 
 function captureItem() {
   const inp = document.getElementById('captureInput');
@@ -1118,9 +1168,10 @@ function renderCapture() {
     el.className = 'capture-item fade-up';
     el.innerHTML = `
       <div class="capture-badge" onclick="pickSource(event,${realIdx})">${item.source}</div>
-      <div class="capture-body" onclick="toggleExpand(this)">
+      <div class="capture-body">
         <div class="capture-text${isLong ? ' clamped' : ''}">${esc(item.text)}</div>
-        <div class="capture-time">${relTime(item.ts)}${isLong ? ' · tap to expand' : ''}</div>
+        ${isLong ? `<span class="capture-expand-btn" onclick="toggleExpand(this)">▾ show more</span>` : ''}
+        <div class="capture-time">${relTime(item.ts)}</div>
       </div>
       <button class="capture-del" onclick="deleteCapture(${realIdx})">✕</button>`;
     list.appendChild(el);
@@ -1132,13 +1183,11 @@ function setFilter(src) {
   renderCapture();
 }
 
-function toggleExpand(bodyEl) {
-  const textEl = bodyEl.querySelector('.capture-text');
-  const timeEl = bodyEl.querySelector('.capture-time');
-  const wasClamped = textEl.classList.toggle('clamped');
-  // Update hint text
-  const base = timeEl.textContent.replace(' · tap to expand','').replace(' · tap to collapse','');
-  timeEl.textContent = base + (wasClamped ? '' : ' · tap to collapse');
+function toggleExpand(btnEl) {
+  const body = btnEl.closest('.capture-body');
+  const textEl = body.querySelector('.capture-text');
+  const isClamped = textEl.classList.toggle('clamped');
+  btnEl.textContent = isClamped ? '▾ show more' : '▴ show less';
 }
 
 const ALL_SOURCES = ['article','book','video','thought','quote','podcast','convo','other'];

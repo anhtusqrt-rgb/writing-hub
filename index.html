@@ -372,9 +372,32 @@ textarea:focus, input[type=text]:focus {
   white-space: nowrap;
 }
 
-.capture-body { flex: 1; min-width: 0; }
+.capture-body { flex: 1; min-width: 0; cursor: pointer; }
 .capture-text { font-size: var(--t-base); line-height: 1.55; color: var(--t1); word-break: break-word; }
+.capture-text.clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .capture-time { font-size: var(--t-xs); color: var(--t3); margin-top: 3px; }
+
+/* Filter row above capture list */
+.capture-filter { display: flex; gap: var(--sp-2); flex-wrap: wrap; padding: 0 var(--sp-1); }
+
+/* Source picker popup */
+.src-picker {
+  position: absolute;
+  background: var(--s2);
+  border: 1px solid var(--b3);
+  border-radius: var(--r-md);
+  padding: var(--sp-2);
+  display: flex; flex-wrap: wrap; gap: 6px;
+  z-index: 200;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  max-width: 260px;
+}
+.capture-badge { cursor: pointer; position: relative; }
 
 .capture-del {
   background: none; border: none;
@@ -689,6 +712,7 @@ textarea:focus, input[type=text]:focus {
       </div>
     </div>
 
+    <div class="capture-filter" id="captureFilter"></div>
     <div id="captureList"></div>
 
   </div>
@@ -1061,25 +1085,103 @@ function captureItem() {
   renderCapture(); showNotif('Saved');
 }
 
+let activeFilter = null;
+
 function renderCapture() {
-  const items = qcLoad();
-  document.getElementById('captureCountLabel').textContent = `Captured (${items.length})`;
+  const all = qcLoad();
+  document.getElementById('captureCountLabel').textContent = `Captured (${all.length})`;
+
+  // Build filter chips from existing sources
+  const sources = [...new Set(all.map(i => i.source))];
+  const filterEl = document.getElementById('captureFilter');
+  if (sources.length > 1) {
+    filterEl.style.display = 'flex';
+    filterEl.innerHTML =
+      `<div class="chip${!activeFilter ? ' active' : ''}" onclick="setFilter(null)">All</div>` +
+      sources.map(s =>
+        `<div class="chip${activeFilter === s ? ' active' : ''}" onclick="setFilter('${s}')">${s}</div>`
+      ).join('');
+  } else {
+    filterEl.style.display = 'none';
+    activeFilter = null;
+  }
+
+  const items = activeFilter ? all.filter(i => i.source === activeFilter) : all;
   const list = document.getElementById('captureList');
   list.innerHTML = '';
   if (!items.length) { list.innerHTML = '<div class="empty-state">Nothing yet. Paste something above.</div>'; return; }
-  [...items].reverse().forEach((item, ri) => {
-    const realIdx = items.length - 1 - ri;
+
+  [...items].reverse().forEach((item) => {
+    const realIdx = all.indexOf(item);
+    const isLong = item.text.length > 180 || item.text.split('\n').length > 4;
     const el = document.createElement('div');
     el.className = 'capture-item fade-up';
     el.innerHTML = `
-      <div class="capture-badge">${item.source}</div>
-      <div class="capture-body">
-        <div class="capture-text">${esc(item.text)}</div>
-        <div class="capture-time">${relTime(item.ts)}</div>
+      <div class="capture-badge" onclick="pickSource(event,${realIdx})">${item.source}</div>
+      <div class="capture-body" onclick="toggleExpand(this)">
+        <div class="capture-text${isLong ? ' clamped' : ''}">${esc(item.text)}</div>
+        <div class="capture-time">${relTime(item.ts)}${isLong ? ' · tap to expand' : ''}</div>
       </div>
       <button class="capture-del" onclick="deleteCapture(${realIdx})">✕</button>`;
     list.appendChild(el);
   });
+}
+
+function setFilter(src) {
+  activeFilter = src;
+  renderCapture();
+}
+
+function toggleExpand(bodyEl) {
+  const textEl = bodyEl.querySelector('.capture-text');
+  const timeEl = bodyEl.querySelector('.capture-time');
+  const wasClamped = textEl.classList.toggle('clamped');
+  // Update hint text
+  const base = timeEl.textContent.replace(' · tap to expand','').replace(' · tap to collapse','');
+  timeEl.textContent = base + (wasClamped ? '' : ' · tap to collapse');
+}
+
+const ALL_SOURCES = ['article','book','video','thought','quote','podcast','convo','other'];
+
+function pickSource(e, realIdx) {
+  e.stopPropagation();
+  // Remove any existing picker
+  document.querySelectorAll('.src-picker').forEach(p => p.remove());
+
+  const badge = e.currentTarget;
+  const picker = document.createElement('div');
+  picker.className = 'src-picker';
+  ALL_SOURCES.forEach(s => {
+    const c = document.createElement('div');
+    c.className = 'chip';
+    c.textContent = s;
+    c.onclick = (ev) => {
+      ev.stopPropagation();
+      const items = qcLoad();
+      if (items[realIdx]) { items[realIdx].source = s; qcSave(items); renderCapture(); }
+      picker.remove();
+    };
+    picker.appendChild(c);
+  });
+  // Add custom tag input
+  const inp = document.createElement('input');
+  inp.type = 'text'; inp.placeholder = '+ custom';
+  inp.style.cssText = 'background:var(--s3);border:1px solid var(--b3);border-radius:var(--r-sm);padding:4px 8px;color:var(--t1);font-size:12px;width:100%;outline:none;';
+  inp.onkeydown = (ev) => {
+    if (ev.key === 'Enter' && inp.value.trim()) {
+      const s = inp.value.trim().toLowerCase();
+      const items = qcLoad();
+      if (items[realIdx]) { items[realIdx].source = s; qcSave(items); renderCapture(); }
+      picker.remove();
+    }
+    ev.stopPropagation();
+  };
+  picker.appendChild(inp);
+
+  badge.appendChild(picker);
+  setTimeout(() => inp.focus(), 50);
+  // Dismiss on outside click
+  setTimeout(() => document.addEventListener('click', () => picker.remove(), { once: true }), 10);
 }
 
 function deleteCapture(idx) {

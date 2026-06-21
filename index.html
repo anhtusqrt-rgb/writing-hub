@@ -8,6 +8,8 @@
 <meta name="apple-mobile-web-app-title" content="Writing Hub">
 <meta name="theme-color" content="#090E1A">
 <title>Writing Hub</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
 /* ═══════════════════════════════════════════════════════
    DESIGN SYSTEM — Dark Elevated
@@ -172,7 +174,7 @@ body {
   border-radius: 0 0 var(--r-sm) var(--r-sm);
 }
 
-.tab-icon { font-size: 17px; line-height: 1; }
+.tab-icon { width: 22px; height: 22px; flex-shrink: 0; }
 .tab-label { font-size: var(--t-xs); font-weight: 600; letter-spacing: 0.04em; }
 
 /* ── DESIGN SYSTEM COMPONENTS ── */
@@ -642,7 +644,18 @@ textarea:focus, input[type=text]:focus {
 <!-- APP HEADER -->
 <div class="app-header">
   <div class="app-wordmark">Writing Hub</div>
-  <div class="app-meta" id="headerDate"></div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div style="display:flex;align-items:center;gap:5px;">
+      <div id="syncDot" style="width:6px;height:6px;border-radius:50%;background:var(--t4);transition:background 0.3s;"></div>
+      <div class="app-meta" id="headerDate"></div>
+    </div>
+    <button onclick="openSyncModal()" style="background:none;border:none;cursor:pointer;color:var(--t3);padding:2px 4px;border-radius:4px;" title="Sync settings">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+        <path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+      </svg>
+    </button>
+  </div>
 </div>
 
 <div class="screens">
@@ -809,15 +822,24 @@ textarea:focus, input[type=text]:focus {
 <!-- TAB BAR -->
 <div class="tab-bar">
   <button class="tab active" id="tab-btn-capture" onclick="switchTab('capture')">
-    <div class="tab-icon">📥</div>
+    <svg class="tab-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3v13"/><polyline points="7 11 12 16 17 11"/>
+      <path d="M4 17v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1"/>
+    </svg>
     <div class="tab-label">Capture</div>
   </button>
   <button class="tab" id="tab-btn-prompt" onclick="switchTab('prompt')">
-    <div class="tab-icon">✏️</div>
+    <svg class="tab-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+    </svg>
     <div class="tab-label">Prompt</div>
   </button>
   <button class="tab" id="tab-btn-tracker" onclick="switchTab('tracker')">
-    <div class="tab-icon">📈</div>
+    <svg class="tab-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/>
+      <line x1="9" y1="4" x2="9" y2="9"/><line x1="15" y1="4" x2="15" y2="9"/>
+      <polyline points="8 14 11 17 16 12"/>
+    </svg>
     <div class="tab-label">Tracker</div>
   </button>
 </div>
@@ -839,7 +861,142 @@ textarea:focus, input[type=text]:focus {
 
 <div class="notif" id="notif"></div>
 
+<!-- SYNC KEY MODAL -->
+<div class="modal-overlay" id="syncModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Sync Settings</div>
+    <div style="font-size:12px;color:var(--t3);line-height:1.6;">
+      Dùng Sync Key để truy cập cùng một dữ liệu từ mọi thiết bị.
+      Copy key này → mở app trên iPhone/iPad → paste vào đây.
+    </div>
+    <div>
+      <div class="section-label" style="margin-bottom:8px;">Your Sync Key</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div id="syncKeyDisplay" style="flex:1;background:var(--s3);border:1px solid var(--b2);border-radius:var(--r-sm);padding:10px 14px;font-family:monospace;font-size:13px;color:var(--a1);letter-spacing:0.05em;"></div>
+        <button class="btn btn-ghost btn-sm" onclick="copySyncKey()">Copy</button>
+      </div>
+    </div>
+    <div>
+      <div class="section-label" style="margin-bottom:8px;">Enter a different key</div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="syncKeyInput" placeholder="Paste sync key here…" style="flex:1;font-family:monospace;font-size:13px;">
+        <button class="btn btn-primary btn-sm" onclick="applySyncKey()">Apply</button>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--t4);font-style:italic;">
+      Thay key sẽ load dữ liệu từ key mới. Data cũ vẫn còn trên key cũ.
+    </div>
+    <button class="btn btn-ghost" onclick="closeSyncModal()">Close</button>
+  </div>
+</div>
+
 <script>
+/* ═══════════════════════════
+   FIREBASE INIT
+═══════════════════════════ */
+const firebaseConfig = {
+  apiKey: "AIzaSyBrkXBcSKnOcUy8XEy8yjMUbF1p7FX8VUE",
+  authDomain: "diablo-287.firebaseapp.com",
+  projectId: "diablo-287",
+  databaseURL: "https://diablo-287-default-rtdb.asia-southeast1.firebasedatabase.app",
+  storageBucket: "diablo-287.firebasestorage.app",
+  messagingSenderId: "907954648200",
+  appId: "1:907954648200:web:54a195c033e05ad3045b3d"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// In-memory state (fast synchronous reads)
+let captureState = [];
+let trackerState = {};
+let fbListeners = [];
+
+function getSyncKey() {
+  let key = localStorage.getItem('syncKey');
+  if (!key) {
+    key = Math.random().toString(36).substr(2, 8).toUpperCase();
+    localStorage.setItem('syncKey', key);
+  }
+  return key;
+}
+
+function fbPath(sub) { return `users/${getSyncKey()}/${sub}`; }
+
+function setSyncDot(state) {
+  const dot = document.getElementById('syncDot');
+  if (state === 'ok')      { dot.style.background = '#4D9A6A'; }
+  else if (state === 'err'){ dot.style.background = '#A35050'; }
+  else                     { dot.style.background = '#3A4D5E'; }
+}
+
+function initFirebaseListeners() {
+  // Detach old listeners
+  fbListeners.forEach(fn => fn());
+  fbListeners = [];
+
+  // Captures listener
+  const capRef = db.ref(fbPath('captures'));
+  const capOff = capRef.on('value', snap => {
+    captureState = snap.exists() ? Object.values(snap.val()) : [];
+    localStorage.setItem('qc_v3', JSON.stringify(captureState));
+    renderCapture();
+    setSyncDot('ok');
+  }, () => setSyncDot('err'));
+
+  // Tracker listener
+  const trkRef = db.ref(fbPath('tracker'));
+  const trkOff = trkRef.on('value', snap => {
+    trackerState = snap.exists() ? snap.val() : {};
+    localStorage.setItem('wt_v3', JSON.stringify(trackerState));
+    if (document.getElementById('tab-tracker').classList.contains('active')) renderTracker();
+    setSyncDot('ok');
+  }, () => setSyncDot('err'));
+
+  fbListeners = [
+    () => capRef.off('value', capOff),
+    () => trkRef.off('value', trkOff)
+  ];
+}
+
+/* Data layer — sync reads from memory, writes to memory + Firebase */
+function qcLoad() { return captureState; }
+function qcSave(items) {
+  captureState = items;
+  localStorage.setItem('qc_v3', JSON.stringify(items));
+  const obj = {};
+  items.forEach((item, i) => { obj[i] = item; });
+  db.ref(fbPath('captures')).set(obj).catch(e => { console.warn(e); setSyncDot('err'); });
+}
+
+function wtLoad() { return trackerState; }
+function wtSave(data) {
+  trackerState = data;
+  localStorage.setItem('wt_v3', JSON.stringify(data));
+  db.ref(fbPath('tracker')).set(data).catch(e => { console.warn(e); setSyncDot('err'); });
+}
+
+/* Sync key modal */
+function openSyncModal() {
+  document.getElementById('syncKeyDisplay').textContent = getSyncKey();
+  document.getElementById('syncKeyInput').value = '';
+  document.getElementById('syncModal').classList.add('open');
+}
+function closeSyncModal() { document.getElementById('syncModal').classList.remove('open'); }
+function copySyncKey() {
+  navigator.clipboard.writeText(getSyncKey()).then(() => showNotif('Sync key copied!'));
+}
+function applySyncKey() {
+  const val = document.getElementById('syncKeyInput').value.trim().toUpperCase();
+  if (!val || val.length < 4) { showNotif('Key không hợp lệ'); return; }
+  localStorage.setItem('syncKey', val);
+  closeSyncModal();
+  setSyncDot('');
+  initFirebaseListeners();
+  showNotif(`Switched to key: ${val}`);
+}
+
 /* ═══════════════════════════
    PROMPTS
 ═══════════════════════════ */
@@ -1180,13 +1337,21 @@ document.getElementById('captureInput').addEventListener('paste', ()=>{
   },50);
 });
 document.getElementById('exportModal').addEventListener('click',e=>{ if(e.target===document.getElementById('exportModal')) closeExport(); });
+document.getElementById('syncModal').addEventListener('click',e=>{ if(e.target===document.getElementById('syncModal')) closeSyncModal(); });
 document.getElementById('topicInput').addEventListener('keydown',e=>{ if(e.key==='Enter') checkIn(); });
 
 document.getElementById('headerDate').textContent =
   new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
 
+// Load local cache immediately so UI is fast before Firebase responds
+try { captureState = JSON.parse(localStorage.getItem('qc_v3') || '[]'); } catch {}
+try { trackerState = JSON.parse(localStorage.getItem('wt_v3') || '{}'  ); } catch {}
+
 renderCapture();
 newPrompt();
+
+// Then connect Firebase for real-time sync
+initFirebaseListeners();
 </script>
 </body>
 </html>

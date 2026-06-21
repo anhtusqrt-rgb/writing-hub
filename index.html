@@ -195,6 +195,7 @@ body {
   border: 1px solid var(--b2);
   border-radius: var(--r-md);
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .card-body { padding: var(--sp-4); }
@@ -666,9 +667,9 @@ textarea:focus, input[type=text]:focus {
   <div class="screen active" id="tab-capture">
 
     <div class="card">
-      <div class="card-body" style="display:flex;flex-direction:column;gap:8px;">
-        <textarea id="captureInput" rows="2" placeholder="Paste a link, quote, or thought…"></textarea>
-        <div class="chips" id="sourceChips">
+      <div class="card-body">
+        <textarea id="captureInput" rows="3" placeholder="Paste a link, quote, or thought…" style="margin-bottom:10px;"></textarea>
+        <div class="chips" id="sourceChips" style="margin-bottom:10px;">
           <div class="chip active" data-src="article">Article</div>
           <div class="chip" data-src="book">Book</div>
           <div class="chip" data-src="video">Video</div>
